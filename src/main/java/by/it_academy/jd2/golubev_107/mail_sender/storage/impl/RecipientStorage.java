@@ -19,6 +19,11 @@ public class RecipientStorage implements IRecipientStorage {
             FROM app.recipient r
             JOIN app.recipient_type rt ON r.type_id = rt.id
             WHERE r.id = ?;""";
+    private static final String SELECT_READ_BY_EMAIL = """
+            SELECT r.id, r.email, rt.type
+            FROM app.recipient r
+            JOIN app.recipient_type rt ON r.type_id = rt.id
+            WHERE r.email = ?;""";
     private final IConnectionManager connectionManager;
 
     public RecipientStorage(IConnectionManager connectionManager) {
@@ -90,6 +95,27 @@ public class RecipientStorage implements IRecipientStorage {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to read a recipient with id: " + id);
+        }
+        return null;
+    }
+
+    @Override
+    public Recipient readByEmail(String emailAddress) {
+        try (Connection connection = connectionManager.getConnection();) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_READ_BY_EMAIL)) {
+                preparedStatement.setString(1, emailAddress);
+                try (ResultSet rs = preparedStatement.executeQuery()) {
+                    if (rs.next()) {
+                        return Recipient.builder()
+                                        .setId(rs.getLong("id"))
+                                        .setEmailAddress(rs.getString("email"))
+                                        .setType(Recipient.RecipientType.valueOf(rs.getString("type")))
+                                        .build();
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to read a recipient with id: " + emailAddress);
         }
         return null;
     }

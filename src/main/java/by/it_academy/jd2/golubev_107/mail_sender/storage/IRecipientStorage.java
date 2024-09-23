@@ -7,4 +7,6 @@ public interface IRecipientStorage {
     Recipient create(Recipient recipient);
 
     Recipient readById(Long id);
+
+    Recipient readByEmail(String emailAddress);
 }
