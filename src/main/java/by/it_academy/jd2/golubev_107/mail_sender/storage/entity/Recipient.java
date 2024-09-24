@@ -5,12 +5,12 @@ import java.util.Objects;
 public class Recipient {
 
     private Long id;
-    private String emailAddress;
+    private RecipientAddress address;
     private RecipientType type;
 
-    private Recipient(Long id, String emailAddress, RecipientType type) {
+    private Recipient(Long id, RecipientAddress address, RecipientType type) {
         this.id = id;
-        this.emailAddress = emailAddress;
+        this.address = address;
         this.type = type;
     }
 
@@ -26,12 +26,12 @@ public class Recipient {
         this.id = id;
     }
 
-    public String getEmailAddress() {
-        return emailAddress;
+    public RecipientAddress getAddress() {
+        return address;
     }
 
-    public void setEmailAddress(String emailAddress) {
-        this.emailAddress = emailAddress;
+    public void setAddress(RecipientAddress address) {
+        this.address = address;
     }
 
     public RecipientType getType() {
@@ -47,19 +47,19 @@ public class Recipient {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Recipient recipient = (Recipient) o;
-        return Objects.equals(id, recipient.id) && Objects.equals(emailAddress, recipient.emailAddress) && type == recipient.type;
+        return Objects.equals(id, recipient.id) && Objects.equals(address, recipient.address) && type == recipient.type;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, emailAddress, type);
+        return Objects.hash(id, address, type);
     }
 
     @Override
     public String toString() {
         return "Recipient{" +
                 "id=" + id +
-                ", emailAddress='" + emailAddress + '\'' +
+                ", address=" + address +
                 ", type=" + type +
                 '}';
     }
@@ -70,16 +70,19 @@ public class Recipient {
 
     public static class RecipientBuilder {
         private Long id;
-        private String emailAddress;
+        private RecipientAddress address;
         private RecipientType type;
+
+        private RecipientBuilder() {
+        }
 
         public RecipientBuilder setId(Long id) {
             this.id = id;
             return this;
         }
 
-        public RecipientBuilder setEmailAddress(String emailAddress) {
-            this.emailAddress = emailAddress;
+        public RecipientBuilder setAddress(RecipientAddress address) {
+            this.address = address;
             return this;
         }
 
@@ -89,7 +92,7 @@ public class Recipient {
         }
 
         public Recipient build() {
-            return new Recipient(id, emailAddress, type);
+            return new Recipient(id, address, type);
         }
     }
 }
