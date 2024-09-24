@@ -36,6 +36,16 @@ public class DBUtil {
         }
     }
 
+    public static String setDynamicInsertSqlParams(String sql, final int paramsCount) {
+        if (paramsCount < MIN_PARAMS_COUNT) {
+            throw new IllegalArgumentException("SQL params amount can't be negative or equal to 0");
+        }
+        final StringBuilder sb = new StringBuilder(
+                String.join(", ", Collections.nCopies(paramsCount, "(?)")));
+        sql = sql.replace("(?)", sb);
+        return sql;
+    }
+
     public static String setDynamicSelectSqlParams(String sql, final int paramsCount) {
         if (paramsCount < MIN_PARAMS_COUNT) {
             throw new IllegalArgumentException("SQL params amount can't be negative or equal 0");

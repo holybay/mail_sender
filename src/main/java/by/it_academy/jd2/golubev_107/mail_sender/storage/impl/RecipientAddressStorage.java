@@ -9,6 +9,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class RecipientAddressStorage implements IRecipientAddressStorage {
 
@@ -50,6 +53,44 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
         } catch (SQLException e) {
             DBUtil.transactionRollback(connection);
             throw new RuntimeException("Failed to create a recipient address!" + e);
+        } finally {
+            DBUtil.connectionClose(connection);
+        }
+    }
+
+    @Override
+    public List<RecipientAddress> create(Collection<RecipientAddress> addresses) {
+        Connection connection = null;
+        try {
+            connection = connectionManager.getConnection();
+            connection.setAutoCommit(false);
+            DBUtil.transactionBegin(connection);
+
+            List<Long> idList = new ArrayList<>();
+            try (PreparedStatement insrtRecStmt = connection.prepareStatement(
+                    DBUtil.setDynamicInsertSqlParams(INSERT_ADDRESS_QUERY, addresses.size()))) {
+                int paramCounter = 1;
+                for (RecipientAddress address : addresses) {
+                    insrtRecStmt.setString(paramCounter, address.getEmailAddress());
+                    paramCounter++;
+                }
+                try (ResultSet rs = insrtRecStmt.executeQuery()) {
+                    while (rs.next()) {
+                        idList.add(rs.getLong("id"));
+                    }
+                }
+                if (addresses.size() != idList.size()) {
+                    DBUtil.transactionRollback(connection);
+                    throw new IllegalStateException("Didn't receive all the IDs for the provided recipient type!");
+                }
+                insrtRecStmt.clearParameters();
+            }
+
+            connection.commit();
+            return readAllByIds(idList);
+        } catch (SQLException e) {
+            DBUtil.transactionRollback(connection);
+            throw new RuntimeException("Failed to create a recipient!" + e);
         } finally {
             DBUtil.connectionClose(connection);
         }
