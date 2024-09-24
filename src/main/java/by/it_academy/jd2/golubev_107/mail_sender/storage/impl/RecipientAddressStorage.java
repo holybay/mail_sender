@@ -60,6 +60,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
             try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_READ_BY_ID)) {
                 preparedStatement.setLong(1, id);
                 try (ResultSet rs = preparedStatement.executeQuery()) {
+                    preparedStatement.clearParameters();
                     if (rs.next()) {
                         RecipientAddress address = new RecipientAddress();
                         address.setId(rs.getLong("id"));
@@ -80,6 +81,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
             try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_READ_BY_EMAIL)) {
                 preparedStatement.setString(1, emailAddress);
                 try (ResultSet rs = preparedStatement.executeQuery()) {
+                    preparedStatement.clearParameters();
                     if (rs.next()) {
                         RecipientAddress address = new RecipientAddress();
                         address.setId(rs.getLong("id"));
