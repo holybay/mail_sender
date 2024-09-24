@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 public class RecipientAddressStorage implements IRecipientAddressStorage {
 
-    private static final String INSERT_RECIPIENT_QUERY = "INSERT INTO app.recipient_address (email) VALUES(?) RETURNING id;";
+    private static final String INSERT_ADDRESS_QUERY = "INSERT INTO app.recipient_address (email) VALUES(?) RETURNING id;";
     private static final String SELECT_READ_BY_ID = "SELECT id,email FROM app.recipient_address WHERE id = ?;";
     private static final String SELECT_READ_BY_EMAIL = "SELECT id,email FROM app.recipient_address WHERE email = ?;";
     private final IConnectionManager connectionManager;
@@ -30,7 +30,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
             DBUtil.transactionBegin(connection);
 
             Long recId = null;
-            try (PreparedStatement insrtRecStmt = connection.prepareStatement(INSERT_RECIPIENT_QUERY)) {
+            try (PreparedStatement insrtRecStmt = connection.prepareStatement(INSERT_ADDRESS_QUERY)) {
                 insrtRecStmt.setString(1, address.getEmailAddress());
                 try (ResultSet rs = insrtRecStmt.executeQuery();) {
                     if (rs.next()) {
@@ -39,7 +39,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
                 }
                 if (recId == null) {
                     DBUtil.transactionRollback(connection);
-                    throw new IllegalStateException("Didn't receive the ID for the provided recipient type!");
+                    throw new IllegalStateException("Didn't receive the ID for the provided recipient address!");
                 }
                 insrtRecStmt.clearParameters();
             }
@@ -48,7 +48,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
             return readById(recId);
         } catch (SQLException e) {
             DBUtil.transactionRollback(connection);
-            throw new RuntimeException("Failed to create a recipient!" + e);
+            throw new RuntimeException("Failed to create a recipient address!" + e);
         } finally {
             DBUtil.connectionClose(connection);
         }
@@ -69,7 +69,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to read a recipient with id: " + id);
+            throw new RuntimeException("Failed to read a recipient address with id: " + id);
         }
         return null;
     }
@@ -89,7 +89,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to read a recipient with id: " + emailAddress);
+            throw new RuntimeException("Failed to find a recipient address: " + emailAddress);
         }
         return null;
     }
