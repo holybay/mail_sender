@@ -40,11 +40,9 @@ public class DBUtil {
         if (paramsCount < MIN_PARAMS_COUNT) {
             throw new IllegalArgumentException("SQL params amount can't be negative or equal 0");
         }
-        if (paramsCount > MIN_PARAMS_COUNT) {
-            final StringBuilder sb = new StringBuilder(
-                    String.join(", ", Collections.nCopies(paramsCount, "?")));
-            sql = sql.replace("(?)", "(" + sb + ")");
-        }
+        final StringBuilder sb = new StringBuilder(
+                String.join(", ", Collections.nCopies(paramsCount, "?")));
+        sql = sql.replace("(?)", "(" + sb + ")");
         return sql;
     }
 
