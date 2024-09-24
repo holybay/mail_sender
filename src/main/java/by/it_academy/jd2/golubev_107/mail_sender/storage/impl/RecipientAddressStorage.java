@@ -69,7 +69,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to read a recipient address with id: " + id);
+            throw new RuntimeException("Failed to read a recipient address with id: " + id, e);
         }
         return null;
     }
@@ -89,7 +89,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find a recipient address: " + emailAddress);
+            throw new RuntimeException("Failed to find a recipient address: " + emailAddress, e);
         }
         return null;
     }
