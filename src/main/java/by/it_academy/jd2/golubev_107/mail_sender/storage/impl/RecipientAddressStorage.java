@@ -14,6 +14,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
 
     private static final String INSERT_ADDRESS_QUERY = "INSERT INTO app.recipient_address (email) VALUES(?) RETURNING id;";
     private static final String SELECT_READ_BY_ID = "SELECT id,email FROM app.recipient_address WHERE id = ?;";
+    private static final String SELECT_ALL_IN_LIST_QUERY = "SELECT id, email FROM app.recipient_address WHERE id IN (?);";
     private static final String SELECT_READ_BY_EMAIL = "SELECT id,email FROM app.recipient_address WHERE email = ?;";
     private final IConnectionManager connectionManager;
 
@@ -73,6 +74,33 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
             throw new RuntimeException("Failed to read a recipient address with id: " + id, e);
         }
         return null;
+    }
+
+    @Override
+    public List<RecipientAddress> readAllByIds(Collection<Long> idList) {
+        try (Connection connection = connectionManager.getConnection();) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                    DBUtil.setDynamicSelectSqlParams(SELECT_ALL_IN_LIST_QUERY, idList.size()))) {
+                int paramCounter = 1;
+                for (Long id : idList) {
+                    preparedStatement.setLong(paramCounter, id);
+                    paramCounter++;
+                }
+                try (ResultSet rs = preparedStatement.executeQuery()) {
+                    List<RecipientAddress> addresses = new ArrayList<>();
+                    while (rs.next()) {
+                        RecipientAddress address = new RecipientAddress();
+                        address.setId(rs.getLong("id"));
+                        address.setEmailAddress(rs.getString("email"));
+                        addresses.add(address);
+                    }
+                    preparedStatement.clearParameters();
+                    return addresses;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to execute a query!", e);
+        }
     }
 
     @Override

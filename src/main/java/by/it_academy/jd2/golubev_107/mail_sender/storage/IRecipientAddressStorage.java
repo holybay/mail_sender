@@ -8,5 +8,7 @@ public interface IRecipientAddressStorage {
 
     RecipientAddress readById(Long id);
 
+    List<RecipientAddress> readAllByIds(Collection<Long> idList);
+
     RecipientAddress readByEmail(String emailAddress);
 }
