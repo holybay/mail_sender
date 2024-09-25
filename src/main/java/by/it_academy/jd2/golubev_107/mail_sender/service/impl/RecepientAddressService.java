@@ -18,7 +18,7 @@ public class RecepientAddressService implements IRecipientAddressService {
         return storage.create(toEntity(dto));
     }
 
-    public RecipientAddress toEntity(RecipientAddressDto dto) {
+    private RecipientAddress toEntity(RecipientAddressDto dto) {
         RecipientAddress entity = new RecipientAddress();
         entity.setEmailAddress(dto.getEmailAddress());
         return entity;
