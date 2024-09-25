@@ -5,6 +5,8 @@ import by.it_academy.jd2.golubev_107.mail_sender.service.dto.RecipientAddressDto
 import by.it_academy.jd2.golubev_107.mail_sender.storage.IRecipientAddressStorage;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.RecipientAddress;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 public class RecepientAddressService implements IRecipientAddressService {
@@ -24,6 +26,14 @@ public class RecepientAddressService implements IRecipientAddressService {
         RecipientAddress entity = new RecipientAddress();
         entity.setEmailAddress(dto.getEmailAddress());
         return entity;
+    }
+
+    @Override
+    public List<RecipientAddress> create(RecipientAddressDto[] dtos) {
+        List<RecipientAddress> addresses = Arrays.stream(dtos)
+                                                 .map(this::toEntity)
+                                                 .toList();
+        return storage.create(addresses);
     }
 
     @Override
