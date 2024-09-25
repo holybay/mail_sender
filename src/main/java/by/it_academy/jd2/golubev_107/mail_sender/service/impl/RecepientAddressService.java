@@ -6,6 +6,7 @@ import by.it_academy.jd2.golubev_107.mail_sender.storage.IRecipientAddressStorag
 import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.RecipientAddress;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -46,5 +47,10 @@ public class RecepientAddressService implements IRecipientAddressService {
             throw new NoSuchElementException("There is no such email address with this id: " + id);
         }
         return address;
+    }
+
+    @Override
+    public List<RecipientAddress> getAllByIds(Collection<Long> idList) {
+        return storage.readAllByIds(idList);
     }
 }
