@@ -7,4 +7,5 @@ public interface IRecipientAddressService {
 
     RecipientAddress create(RecipientAddressDto dto);
 
+    RecipientAddress getById(Long id);
 }
