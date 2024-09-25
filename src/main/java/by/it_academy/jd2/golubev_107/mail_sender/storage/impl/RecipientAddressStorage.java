@@ -53,6 +53,9 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
         } catch (SQLException e) {
             DBUtil.transactionRollback(connection);
             throw new RuntimeException("Failed to create a recipient address!" + e);
+        } catch (RuntimeException e) {
+            DBUtil.transactionRollback(connection);
+            throw new RuntimeException("Failed to create a recipient address!" + address, e);
         } finally {
             DBUtil.connectionClose(connection);
         }
@@ -91,6 +94,9 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
         } catch (SQLException e) {
             DBUtil.transactionRollback(connection);
             throw new RuntimeException("Failed to create a recipient!" + e);
+        } catch (RuntimeException e) {
+            DBUtil.transactionRollback(connection);
+            throw new RuntimeException("Failed to create a recipient addresses!" + addresses, e);
         } finally {
             DBUtil.connectionClose(connection);
         }
