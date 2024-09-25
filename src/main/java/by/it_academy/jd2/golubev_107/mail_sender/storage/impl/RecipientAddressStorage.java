@@ -68,7 +68,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
 
             List<Long> idList = new ArrayList<>();
             try (PreparedStatement insrtRecStmt = connection.prepareStatement(
-                    DBUtil.setDynamicInsertSqlParams(INSERT_ADDRESS_QUERY, addresses.size()))) {
+                    DBUtil.setMultipleRowsToInsert(INSERT_ADDRESS_QUERY, addresses.size()))) {
                 int paramCounter = 1;
                 for (RecipientAddress address : addresses) {
                     insrtRecStmt.setString(paramCounter, address.getEmailAddress());
