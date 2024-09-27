@@ -36,13 +36,19 @@ public class DBUtil {
         }
     }
 
-    public static String setDynamicInsertSqlParams(String sql, final int paramsCount) {
-        if (paramsCount < MIN_PARAMS_COUNT) {
+    public static String setMultipleRowsToInsert(String sql, final int rowsCountToInsert) {
+        if (rowsCountToInsert < MIN_PARAMS_COUNT) {
             throw new IllegalArgumentException("SQL params amount can't be negative or equal to 0");
         }
+        final int offsetLeft = 1;
+        final int offsetRight = 2;
+        int paramStart = sql.indexOf("?") - offsetLeft;
+        int paramEnd = sql.lastIndexOf("?") + offsetRight;
+        String paramsStrToRepeat = sql.substring(paramStart, paramEnd);
+
         final StringBuilder sb = new StringBuilder(
-                String.join(", ", Collections.nCopies(paramsCount, "(?)")));
-        sql = sql.replace("(?)", sb);
+                String.join(", ", Collections.nCopies(rowsCountToInsert, paramsStrToRepeat)));
+        sql = sql.replace(paramsStrToRepeat, sb);
         return sql;
     }
 
