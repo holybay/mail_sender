@@ -23,8 +23,7 @@ public class MailStorage implements IMailStorage {
     private static final String SELECT_EMAIL_QUERY = "SELECT id, title, body_text FROM app.email WHERE id = ?;";
     private static final String INSERT_CROSS_EMAIL_RECIPIENTS_QUERY = """
             INSERT INTO app.cross_email_address_type (email_id, address_id, type_id)
-            VALUES (?, ?, ?);
-            """;
+            VALUES (?, ?, ?);""";
     private static final String SELECT_RECIPIENT_TYPE_QUERY = "SELECT id FROM app.recipient_type WHERE type = ?;";
     private static final String SELECT_ALL_RECIPIENT_TYPE_QUERY = "SELECT id, type FROM app.recipient_type;";
     private static final String SELECT_RECIPIENTS_BY_EMAIL_ID_QUERY = """
