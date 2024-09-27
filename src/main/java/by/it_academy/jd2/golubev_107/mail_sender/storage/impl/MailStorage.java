@@ -67,7 +67,9 @@ public class MailStorage implements IMailStorage {
             EmailStorageOutDto emailOutDto = selectEmailPart(id, connection);
             if (emailOutDto != null) {
                 Map<Long, Recipient.RecipientType> allRecTypes = selectAllRecipientTypes(connection);
-                selectRecipientsPart(emailOutDto, allRecTypes, connection);
+                Map<Long, List<RecipientOutDto>> allRecptsByEmailId = selectRecipientsPart(emailOutDto,
+                        allRecTypes, connection);
+                setRecipientsToEmail(emailOutDto, allRecptsByEmailId.get(emailOutDto.getId()));
                 return emailOutDto;
             }
         } catch (SQLException e) {
@@ -106,13 +108,18 @@ public class MailStorage implements IMailStorage {
         }
     }
 
-    private void selectRecipientsPart(EmailStorageOutDto emailOutDto, Map<Long, Recipient.RecipientType> allRecTypes,
-                                      Connection connection) throws SQLException {
+    private Map<Long, List<RecipientOutDto>> selectRecipientsPart(EmailStorageOutDto emailOutDto,
+                                                                  Map<Long, Recipient.RecipientType> allRecTypes,
+                                                                  Connection connection) throws SQLException {
         try (PreparedStatement selectRecByEmailIdStmt = connection.prepareStatement(
                 SELECT_RECIPIENTS_BY_EMAIL_ID_QUERY)) {
             selectRecByEmailIdStmt.setLong(1, emailOutDto.getId());
             try (ResultSet rs = selectRecByEmailIdStmt.executeQuery()) {
                 selectRecByEmailIdStmt.clearParameters();
+                return getEmailRecptsFromRS(rs, allRecTypes);
+            }
+        }
+    }
 
                 Map<Long, List<RecipientOutDto>> allRecptsByEmailId = getEmailRecptsFromRS(rs, allRecTypes);
                 setRecipientsToEmail(emailOutDto, allRecptsByEmailId.get(emailOutDto.getId()));
