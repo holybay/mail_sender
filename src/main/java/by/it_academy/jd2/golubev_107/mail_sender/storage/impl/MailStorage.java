@@ -53,12 +53,9 @@ public class MailStorage implements IMailStorage {
             insertRecipientsByType(emailId, Recipient.RecipientType.BCC.name(), email.getRecipientsBCC(), connection);
 
             connection.commit();
-        } catch (SQLException e) {
+        } catch (SQLException | RuntimeException e) {
             DBUtil.transactionRollback(connection);
-            throw new RuntimeException("Failed to create an email" + email);
-        } catch (RuntimeException e) {
-            DBUtil.transactionRollback(connection);
-            throw new RuntimeException("Failed to create an email" + email, e);
+            throw new RuntimeException("Failed to create an email: " + email, e);
         } finally {
             DBUtil.connectionClose(connection);
         }
@@ -75,7 +72,7 @@ public class MailStorage implements IMailStorage {
                 return emailOutDto;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to read an email by id: " + id);
+            throw new RuntimeException("Failed to read an email by id: " + id, e);
         }
         return null;
     }
