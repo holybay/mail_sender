@@ -27,7 +27,7 @@ public class MailStorage implements IMailStorage {
     private static final String SELECT_RECIPIENT_TYPE_QUERY = "SELECT id FROM app.recipient_type WHERE type = ?;";
     private static final String SELECT_ALL_RECIPIENT_TYPE_QUERY = "SELECT id, type FROM app.recipient_type;";
     private static final String SELECT_RECIPIENTS_BY_EMAIL_ID_QUERY = """
-            SELECT id, address_id, type_id
+            SELECT id, email_id, address_id, type_id
             FROM app.cross_email_address_type
             WHERE email_id = ?;
             """;
@@ -114,32 +114,53 @@ public class MailStorage implements IMailStorage {
             try (ResultSet rs = selectRecByEmailIdStmt.executeQuery()) {
                 selectRecByEmailIdStmt.clearParameters();
 
-                List<RecipientOutDto> allRecipientList = new ArrayList<>();
-                while (rs.next()) {
-                    RecipientOutDto recOut = new RecipientOutDto();
-                    recOut.setId(rs.getLong("id"));
-                    recOut.setAddress_id(rs.getLong("address_id"));
-                    recOut.setType(allRecTypes.get(rs.getLong("type_id")));
-                    allRecipientList.add(recOut);
-                }
-
-                List<RecipientOutDto> recipientsTo = new ArrayList<>();
-                List<RecipientOutDto> recipientsCC = new ArrayList<>();
-                List<RecipientOutDto> recipientsBCC = new ArrayList<>();
-                allRecipientList.forEach(e -> {
-                    if (Recipient.RecipientType.TO.equals(e.getType())) {
-                        recipientsTo.add(e);
-                    } else if (Recipient.RecipientType.CC.equals(e.getType())) {
-                        recipientsCC.add(e);
-                    } else {
-                        recipientsBCC.add(e);
-                    }
-                });
-                emailOutDto.setRecipientsTo(recipientsTo);
-                emailOutDto.setRecipientsCC(recipientsCC);
-                emailOutDto.setRecipientsBCC(recipientsBCC);
+                Map<Long, List<RecipientOutDto>> allRecptsByEmailId = getEmailRecptsFromRS(rs, allRecTypes);
+                setRecipientsToEmail(emailOutDto, allRecptsByEmailId.get(emailOutDto.getId()));
             }
         }
+    }
+
+    private Map<Long, List<RecipientOutDto>> getEmailRecptsFromRS(ResultSet rs,
+                                                                  Map<Long, Recipient.RecipientType> allRecTypes)
+            throws SQLException {
+
+        Map<Long, List<RecipientOutDto>> allRecptsByEmail = new HashMap<>();
+        Long iterableId = null;
+        while (rs.next()) {
+            long emailIdToCheck = rs.getLong("email_id");
+            if (iterableId == null) {
+                iterableId = emailIdToCheck;
+                allRecptsByEmail.put(iterableId, new ArrayList<>());
+            }
+            if (iterableId != emailIdToCheck) {
+                iterableId = emailIdToCheck;
+                allRecptsByEmail.put(iterableId, new ArrayList<>());
+            }
+            RecipientOutDto recOut = new RecipientOutDto();
+            recOut.setId(rs.getLong("id"));
+            recOut.setAddress_id(rs.getLong("address_id"));
+            recOut.setType(allRecTypes.get(rs.getLong("type_id")));
+            allRecptsByEmail.get(iterableId).add(recOut);
+        }
+        return allRecptsByEmail;
+    }
+
+    private void setRecipientsToEmail(EmailStorageOutDto emailOutDto, List<RecipientOutDto> emailRecptList) {
+        List<RecipientOutDto> recipientsTo = new ArrayList<>();
+        List<RecipientOutDto> recipientsCC = new ArrayList<>();
+        List<RecipientOutDto> recipientsBCC = new ArrayList<>();
+        emailRecptList.forEach(e -> {
+            if (Recipient.RecipientType.TO.equals(e.getType())) {
+                recipientsTo.add(e);
+            } else if (Recipient.RecipientType.CC.equals(e.getType())) {
+                recipientsCC.add(e);
+            } else {
+                recipientsBCC.add(e);
+            }
+        });
+        emailOutDto.setRecipientsTo(recipientsTo);
+        emailOutDto.setRecipientsCC(recipientsCC);
+        emailOutDto.setRecipientsBCC(recipientsBCC);
     }
 
     private Long insertEmail(Email email, Connection connection) throws SQLException {
