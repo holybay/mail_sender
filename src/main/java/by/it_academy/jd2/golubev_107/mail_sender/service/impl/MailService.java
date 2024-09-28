@@ -3,8 +3,11 @@ package by.it_academy.jd2.golubev_107.mail_sender.service.impl;
 import by.it_academy.jd2.golubev_107.mail_sender.service.IMailService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.IRecipientAddressService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.dto.CreateEmailDto;
+import by.it_academy.jd2.golubev_107.mail_sender.service.dto.EmailOutDto;
 import by.it_academy.jd2.golubev_107.mail_sender.service.dto.RecipientAddressDto;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.IMailStorage;
+import by.it_academy.jd2.golubev_107.mail_sender.storage.dto.EmailStorageOutDto;
+import by.it_academy.jd2.golubev_107.mail_sender.storage.dto.RecipientOutDto;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.Email;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.Recipient;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.RecipientAddress;
@@ -17,6 +20,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class MailService implements IMailService {
 
@@ -33,6 +38,37 @@ public class MailService implements IMailService {
         validate(dto);
         Email emailEntity = toEmailEntity(dto);
         mailStorage.create(emailEntity);
+    }
+
+    @Override
+    public List<EmailOutDto> getAll() {
+        List<EmailStorageOutDto> emailStorageOutList = mailStorage.readAll();
+        List<Email> allEmails = setAllRecipients(emailStorageOutList);
+
+        return allEmails.stream()
+                        .map(this::toEmailOutDto)
+                        .toList();
+    }
+
+    private List<Email> setAllRecipients(List<EmailStorageOutDto> emailStorageOutList) {
+        Set<Long> uniqueAddressIdSet = new HashSet<>();
+        emailStorageOutList.forEach(e -> {
+            setUniqueAddressIds(e.getRecipientsTo(), uniqueAddressIdSet);
+            setUniqueAddressIds(e.getRecipientsCC(), uniqueAddressIdSet);
+            setUniqueAddressIds(e.getRecipientsBCC(), uniqueAddressIdSet);
+        });
+
+        List<RecipientAddress> uniqueEmailAddressList = addressService.getAllByIds(uniqueAddressIdSet);
+        Map<Long, RecipientAddress> uniqueEmailAddressMap = uniqueEmailAddressList.stream()
+                                                                                  .collect(Collectors.toMap(RecipientAddress::getId,
+                                                                                          Function.identity()));
+        return emailStorageOutList.stream()
+                                  .map(e -> toEmailEntity(e, uniqueEmailAddressMap))
+                                  .toList();
+    }
+
+    private void setUniqueAddressIds(List<RecipientOutDto> recipientOutDtoList, Set<Long> uniqueEmails) {
+        recipientOutDtoList.forEach(rec -> uniqueEmails.add(rec.getAddress_id()));
     }
 
     private void validate(CreateEmailDto dto) {
@@ -120,6 +156,26 @@ public class MailService implements IMailService {
                     .build();
     }
 
+    private Email toEmailEntity(EmailStorageOutDto storageOutDto, Map<Long, RecipientAddress> uniqueEmailAddressMap) {
+        List<Recipient> recipientsTo = storageOutDto.getRecipientsTo().stream()
+                                                    .map(e -> toRecipient(e, uniqueEmailAddressMap.get(e.getAddress_id())))
+                                                    .toList();
+        List<Recipient> recipientsCC = storageOutDto.getRecipientsCC().stream()
+                                                    .map(e -> toRecipient(e, uniqueEmailAddressMap.get(e.getAddress_id())))
+                                                    .toList();
+        List<Recipient> recipientsBCC = storageOutDto.getRecipientsBCC().stream()
+                                                     .map(e -> toRecipient(e, uniqueEmailAddressMap.get(e.getAddress_id())))
+                                                     .toList();
+        return Email.builder()
+                    .setId(storageOutDto.getId())
+                    .setRecipientsTo(recipientsTo)
+                    .setRecipientsCC(recipientsCC)
+                    .setRecipientsBCC(recipientsBCC)
+                    .setTitle(storageOutDto.getTitle())
+                    .setText(storageOutDto.getText())
+                    .build();
+    }
+
     private RecipientAddressDto toRecptAddressDto(String email) {
         RecipientAddressDto addressDto = new RecipientAddressDto();
         addressDto.setEmailAddress(email);
@@ -131,5 +187,24 @@ public class MailService implements IMailService {
                         .setAddress(address)
                         .setType(type)
                         .build();
+    }
+
+    private Recipient toRecipient(RecipientOutDto storageOutDto, RecipientAddress address) {
+        return Recipient.builder()
+                        .setId(storageOutDto.getId())
+                        .setAddress(address)
+                        .setType(storageOutDto.getType())
+                        .build();
+    }
+
+    private EmailOutDto toEmailOutDto(Email email) {
+        return EmailOutDto.builder()
+                          .setId(email.getId())
+                          .setRecipientsTo(email.getRecipientsTo())
+                          .setRecipientsCC(email.getRecipientsCC())
+                          .setRecipientsBCC(email.getRecipientsBCC())
+                          .setTitle(email.getTitle())
+                          .setText(email.getText())
+                          .build();
     }
 }
