@@ -25,4 +25,8 @@ public class ServiceFactory {
     public IRecipientAddressService getRecipientAddressService() {
         return recipientAddressService;
     }
+
+    public IMailService getMailService() {
+        return mailService;
+    }
 }
