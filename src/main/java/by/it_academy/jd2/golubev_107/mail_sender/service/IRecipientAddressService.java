@@ -10,7 +10,7 @@ public interface IRecipientAddressService {
 
     RecipientAddress create(RecipientAddressDto dto);
 
-    List<RecipientAddress> create(RecipientAddressDto[] dtos);
+    List<RecipientAddress> create(List<RecipientAddressDto> dtoList);
 
     RecipientAddress getById(Long id);
 
