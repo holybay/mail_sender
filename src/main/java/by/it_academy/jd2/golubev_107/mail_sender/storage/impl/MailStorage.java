@@ -188,7 +188,7 @@ public class MailStorage implements IMailStorage {
             }
             RecipientOutDto recOut = new RecipientOutDto();
             recOut.setId(rs.getLong("id"));
-            recOut.setAddress_id(rs.getLong("address_id"));
+            recOut.setAddressId(rs.getLong("address_id"));
             recOut.setType(allRecTypes.get(rs.getLong("type_id")));
             allRecptsByEmail.get(iterableId).add(recOut);
         }

@@ -68,7 +68,7 @@ public class MailService implements IMailService {
     }
 
     private void setUniqueAddressIds(List<RecipientOutDto> recipientOutDtoList, Set<Long> uniqueEmails) {
-        recipientOutDtoList.forEach(rec -> uniqueEmails.add(rec.getAddress_id()));
+        recipientOutDtoList.forEach(rec -> uniqueEmails.add(rec.getAddressId()));
     }
 
     private void validate(CreateEmailDto dto) {
@@ -158,13 +158,13 @@ public class MailService implements IMailService {
 
     private Email toEmailEntity(EmailStorageOutDto storageOutDto, Map<Long, RecipientAddress> uniqueEmailAddressMap) {
         List<Recipient> recipientsTo = storageOutDto.getRecipientsTo().stream()
-                                                    .map(e -> toRecipient(e, uniqueEmailAddressMap.get(e.getAddress_id())))
+                                                    .map(e -> toRecipient(e, uniqueEmailAddressMap.get(e.getAddressId())))
                                                     .toList();
         List<Recipient> recipientsCC = storageOutDto.getRecipientsCC().stream()
-                                                    .map(e -> toRecipient(e, uniqueEmailAddressMap.get(e.getAddress_id())))
+                                                    .map(e -> toRecipient(e, uniqueEmailAddressMap.get(e.getAddressId())))
                                                     .toList();
         List<Recipient> recipientsBCC = storageOutDto.getRecipientsBCC().stream()
-                                                     .map(e -> toRecipient(e, uniqueEmailAddressMap.get(e.getAddress_id())))
+                                                     .map(e -> toRecipient(e, uniqueEmailAddressMap.get(e.getAddressId())))
                                                      .toList();
         return Email.builder()
                     .setId(storageOutDto.getId())

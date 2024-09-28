@@ -7,7 +7,7 @@ import java.util.Objects;
 public class RecipientOutDto {
 
     private Long id;
-    private Long address_id;
+    private Long addressId;
     private Recipient.RecipientType type;
 
     public Long getId() {
@@ -18,12 +18,12 @@ public class RecipientOutDto {
         this.id = id;
     }
 
-    public Long getAddress_id() {
-        return address_id;
+    public Long getAddressId() {
+        return addressId;
     }
 
-    public void setAddress_id(Long address_id) {
-        this.address_id = address_id;
+    public void setAddressId(Long addressId) {
+        this.addressId = addressId;
     }
 
     public Recipient.RecipientType getType() {
@@ -39,19 +39,19 @@ public class RecipientOutDto {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RecipientOutDto that = (RecipientOutDto) o;
-        return Objects.equals(id, that.id) && Objects.equals(address_id, that.address_id) && type == that.type;
+        return Objects.equals(id, that.id) && Objects.equals(addressId, that.addressId) && type == that.type;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, address_id, type);
+        return Objects.hash(id, addressId, type);
     }
 
     @Override
     public String toString() {
         return "RecipientOutDto{" +
                 "id=" + id +
-                ", address_id=" + address_id +
+                ", address_id=" + addressId +
                 ", type=" + type +
                 '}';
     }
