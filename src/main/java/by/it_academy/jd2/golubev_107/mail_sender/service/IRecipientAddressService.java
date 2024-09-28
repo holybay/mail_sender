@@ -14,5 +14,9 @@ public interface IRecipientAddressService {
 
     RecipientAddress getById(Long id);
 
+    RecipientAddress getByEmail(String email);
+
     List<RecipientAddress> getAllByIds(Collection<Long> idList);
+
+    boolean exists(String email);
 }

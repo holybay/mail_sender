@@ -49,7 +49,17 @@ public class RecepientAddressService implements IRecipientAddressService {
     }
 
     @Override
+    public RecipientAddress getByEmail(String email) {
+        return storage.readByEmail(email);
+    }
+
+    @Override
     public List<RecipientAddress> getAllByIds(Collection<Long> idList) {
         return storage.readAllByIds(idList);
+    }
+
+    @Override
+    public boolean exists(String email) {
+        return storage.readByEmail(email) != null;
     }
 }
