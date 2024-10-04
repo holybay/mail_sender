@@ -2,11 +2,11 @@ package by.it_academy.jd2.golubev_107.mail_sender.service.factory;
 
 import by.it_academy.jd2.golubev_107.mail_sender.platform.IPropertyReader;
 import by.it_academy.jd2.golubev_107.mail_sender.platform.impl.PropertyReader;
-import by.it_academy.jd2.golubev_107.mail_sender.service.IMailSender;
+import by.it_academy.jd2.golubev_107.mail_sender.service.IMailSenderService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.IMailService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.IRecipientAddressService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.config.MailSenderConfig;
-import by.it_academy.jd2.golubev_107.mail_sender.service.impl.MailSender;
+import by.it_academy.jd2.golubev_107.mail_sender.service.impl.MailSenderService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.impl.MailService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.impl.RecepientAddressService;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.factory.StorageFactory;
@@ -22,13 +22,13 @@ public class ServiceFactory {
             "/smtpMailRu.properties");
     private final IRecipientAddressService recipientAddressService;
     private final IMailService mailService;
-    private final IMailSender mailSender;
+    private final IMailSenderService mailSenderService;
 
     private ServiceFactory(StorageFactory storageFactory, String mailPropertiesFile) {
         recipientAddressService = new RecepientAddressService(storageFactory.getRecipientStorage());
         mailService = new MailService(storageFactory.getMailStorage(), recipientAddressService);
         MailSenderConfig config = setMailConfig(mailPropertiesFile);
-        mailSender = new MailSender(config);
+        mailSenderService = new MailSenderService(config);
     }
 
     public static ServiceFactory getInstance() {
@@ -43,8 +43,8 @@ public class ServiceFactory {
         return mailService;
     }
 
-    public IMailSender getMailSender() {
-        return mailSender;
+    public IMailSenderService getMailSenderService() {
+        return mailSenderService;
     }
 
     private MailSenderConfig setMailConfig(String mailPropertiesFile) {

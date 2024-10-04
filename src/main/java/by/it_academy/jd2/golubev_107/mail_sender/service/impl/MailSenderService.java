@@ -1,6 +1,6 @@
 package by.it_academy.jd2.golubev_107.mail_sender.service.impl;
 
-import by.it_academy.jd2.golubev_107.mail_sender.service.IMailSender;
+import by.it_academy.jd2.golubev_107.mail_sender.service.IMailSenderService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.config.MailSenderConfig;
 import by.it_academy.jd2.golubev_107.mail_sender.service.dto.EmailOutDto;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.Recipient;
@@ -21,12 +21,12 @@ import jakarta.mail.internet.MimeMultipart;
 
 import java.util.List;
 
-public class MailSender implements IMailSender {
+public class MailSenderService implements IMailSenderService {
 
     public static final int MIN_RECIPIENT_COUNT = 1;
     private final MailSenderConfig config;
 
-    public MailSender(MailSenderConfig config) {
+    public MailSenderService(MailSenderConfig config) {
         this.config = config;
     }
 
