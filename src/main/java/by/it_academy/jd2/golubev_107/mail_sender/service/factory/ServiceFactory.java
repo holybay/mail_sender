@@ -15,9 +15,9 @@ import java.util.Properties;
 
 public class ServiceFactory {
 
-    public static final String USER_PROP = "mail.smtp.user";
-    public static final String PASSWORD_PROP = "user.password";
-    public static final String DEBUG_MODE_PROP = "debug.mode";
+    private static final String USER_PROP = "mail.smtp.user";
+    private static final String PASSWORD_PROP = "user.password";
+    private static final String DEBUG_MODE_PROP = "debug.mode";
     private static final ServiceFactory INSTANCE = new ServiceFactory(StorageFactory.getInstance(),
             "/smtpMailRu.properties");
     private final IRecipientAddressService recipientAddressService;
