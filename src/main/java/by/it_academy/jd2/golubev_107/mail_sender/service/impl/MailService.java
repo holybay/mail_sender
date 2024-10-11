@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -51,7 +52,7 @@ public class MailService implements IMailService {
     }
 
     private List<Email> setAllRecipients(List<EmailStorageOutDto> emailStorageOutList) {
-        Set<Long> uniqueAddressIdSet = new HashSet<>();
+        Set<UUID> uniqueAddressIdSet = new HashSet<>();
         emailStorageOutList.forEach(e -> {
             setUniqueAddressIds(e.getRecipientsTo(), uniqueAddressIdSet);
             setUniqueAddressIds(e.getRecipientsCC(), uniqueAddressIdSet);
@@ -59,7 +60,7 @@ public class MailService implements IMailService {
         });
 
         List<RecipientAddress> uniqueEmailAddressList = addressService.getAllByIds(uniqueAddressIdSet);
-        Map<Long, RecipientAddress> uniqueEmailAddressMap = uniqueEmailAddressList.stream()
+        Map<UUID, RecipientAddress> uniqueEmailAddressMap = uniqueEmailAddressList.stream()
                                                                                   .collect(Collectors.toMap(RecipientAddress::getId,
                                                                                           Function.identity()));
         return emailStorageOutList.stream()
@@ -67,7 +68,7 @@ public class MailService implements IMailService {
                                   .toList();
     }
 
-    private void setUniqueAddressIds(List<RecipientOutDto> recipientOutDtoList, Set<Long> uniqueEmails) {
+    private void setUniqueAddressIds(List<RecipientOutDto> recipientOutDtoList, Set<UUID> uniqueEmails) {
         recipientOutDtoList.forEach(rec -> uniqueEmails.add(rec.getAddressId()));
     }
 
@@ -156,7 +157,7 @@ public class MailService implements IMailService {
                     .build();
     }
 
-    private Email toEmailEntity(EmailStorageOutDto storageOutDto, Map<Long, RecipientAddress> uniqueEmailAddressMap) {
+    private Email toEmailEntity(EmailStorageOutDto storageOutDto, Map<UUID, RecipientAddress> uniqueEmailAddressMap) {
         List<Recipient> recipientsTo = storageOutDto.getRecipientsTo().stream()
                                                     .map(e -> toRecipient(e, uniqueEmailAddressMap.get(e.getAddressId())))
                                                     .toList();

@@ -1,17 +1,18 @@
 package by.it_academy.jd2.golubev_107.mail_sender.storage.entity;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class RecipientAddress {
 
-    private Long id;
+    private UUID id;
     private String emailAddress;
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

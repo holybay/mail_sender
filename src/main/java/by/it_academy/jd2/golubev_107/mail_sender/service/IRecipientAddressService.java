@@ -5,6 +5,7 @@ import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.RecipientAddress
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 public interface IRecipientAddressService {
 
@@ -12,11 +13,11 @@ public interface IRecipientAddressService {
 
     List<RecipientAddress> create(List<RecipientAddressDto> dtoList);
 
-    RecipientAddress getById(Long id);
+    RecipientAddress getById(UUID id);
 
     RecipientAddress getByEmail(String email);
 
-    List<RecipientAddress> getAllByIds(Collection<Long> idList);
+    List<RecipientAddress> getAllByIds(Collection<UUID> idList);
 
     boolean exists(String email);
 }

@@ -4,6 +4,7 @@ import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.RecipientAddress
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 public interface IRecipientAddressStorage {
 
@@ -11,9 +12,9 @@ public interface IRecipientAddressStorage {
 
     List<RecipientAddress> create(Collection<RecipientAddress> addresses);
 
-    RecipientAddress readById(Long id);
+    RecipientAddress readById(UUID id);
 
-    List<RecipientAddress> readAllByIds(Collection<Long> idList);
+    List<RecipientAddress> readAllByIds(Collection<UUID> idList);
 
     RecipientAddress readByEmail(String emailAddress);
 }

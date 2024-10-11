@@ -13,7 +13,7 @@ ALTER TABLE IF EXISTS app.recipient_type
 
 CREATE TABLE app.recipient_address
 (
-id bigserial,
+id uuid,
 email character varying NOT NULL,
 CONSTRAINT recipient_address_pk PRIMARY KEY (id),
 CONSTRAINT email_unique  UNIQUE(email)
@@ -37,7 +37,7 @@ CREATE TABLE app.cross_email_address_type
 (
 id bigserial,
 email_id bigint,
-address_id bigint,
+address_id uuid,
 type_id bigint,
 CONSTRAINT crs_e_addr_type_pk PRIMARY KEY (id),
 CONSTRAINT crs_e_addr_type_e_fk  FOREIGN KEY (email_id) REFERENCES app.email(id),

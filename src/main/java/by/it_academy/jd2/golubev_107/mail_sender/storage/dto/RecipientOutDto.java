@@ -3,11 +3,12 @@ package by.it_academy.jd2.golubev_107.mail_sender.storage.dto;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.Recipient;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class RecipientOutDto {
 
     private Long id;
-    private Long addressId;
+    private UUID addressId;
     private Recipient.RecipientType type;
 
     public Long getId() {
@@ -18,11 +19,11 @@ public class RecipientOutDto {
         this.id = id;
     }
 
-    public Long getAddressId() {
+    public UUID getAddressId() {
         return addressId;
     }
 
-    public void setAddressId(Long addressId) {
+    public void setAddressId(UUID addressId) {
         this.addressId = addressId;
     }
 

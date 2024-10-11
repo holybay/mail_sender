@@ -8,6 +8,7 @@ import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.RecipientAddress
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 public class RecipientAddressService implements IRecipientAddressService {
 
@@ -24,6 +25,7 @@ public class RecipientAddressService implements IRecipientAddressService {
 
     private RecipientAddress toEntity(RecipientAddressDto dto) {
         RecipientAddress entity = new RecipientAddress();
+        entity.setId(UUID.randomUUID());
         entity.setEmailAddress(dto.getEmailAddress());
         return entity;
     }
@@ -37,7 +39,7 @@ public class RecipientAddressService implements IRecipientAddressService {
     }
 
     @Override
-    public RecipientAddress getById(Long id) {
+    public RecipientAddress getById(UUID id) {
         if (id == null) {
             throw new IllegalArgumentException("Recipient Address id can't be null!");
         }
@@ -54,7 +56,7 @@ public class RecipientAddressService implements IRecipientAddressService {
     }
 
     @Override
-    public List<RecipientAddress> getAllByIds(Collection<Long> idList) {
+    public List<RecipientAddress> getAllByIds(Collection<UUID> idList) {
         return storage.readAllByIds(idList);
     }
 

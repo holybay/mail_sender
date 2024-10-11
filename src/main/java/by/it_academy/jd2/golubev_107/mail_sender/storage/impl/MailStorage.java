@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class MailStorage implements IMailStorage {
 
@@ -188,7 +189,7 @@ public class MailStorage implements IMailStorage {
             }
             RecipientOutDto recOut = new RecipientOutDto();
             recOut.setId(rs.getLong("id"));
-            recOut.setAddressId(rs.getLong("address_id"));
+            recOut.setAddressId(rs.getObject("address_id", UUID.class));
             recOut.setType(allRecTypes.get(rs.getLong("type_id")));
             allRecptsByEmail.get(iterableId).add(recOut);
         }
@@ -260,7 +261,7 @@ public class MailStorage implements IMailStorage {
                 INSERT_CROSS_EMAIL_RECIPIENTS_QUERY)) {
             for (Recipient recipient : recipientList) {
                 insrtCrossEmAddrTypeStmt.setLong(1, emailId);
-                insrtCrossEmAddrTypeStmt.setLong(2, recipient.getAddress().getId());
+                insrtCrossEmAddrTypeStmt.setObject(2, recipient.getAddress().getId());
                 insrtCrossEmAddrTypeStmt.setLong(3, recTypeId);
                 insrtCrossEmAddrTypeStmt.addBatch();
             }

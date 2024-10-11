@@ -12,10 +12,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 public class RecipientAddressStorage implements IRecipientAddressStorage {
 
-    private static final String INSERT_ADDRESS_QUERY = "INSERT INTO app.recipient_address (email) VALUES(?) RETURNING id;";
+    private static final String INSERT_ADDRESS_QUERY = "INSERT INTO app.recipient_address (id, email) VALUES(?,?)";
     private static final String SELECT_READ_BY_ID = "SELECT id,email FROM app.recipient_address WHERE id = ?;";
     private static final String SELECT_ALL_IN_LIST_QUERY = "SELECT id, email FROM app.recipient_address WHERE id IN (?);";
     private static final String SELECT_READ_BY_EMAIL = "SELECT id,email FROM app.recipient_address WHERE email = ?;";
@@ -33,15 +34,11 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
             connection.setAutoCommit(false);
             DBUtil.transactionBegin(connection);
 
-            Long recId = null;
             try (PreparedStatement insrtRecStmt = connection.prepareStatement(INSERT_ADDRESS_QUERY)) {
-                insrtRecStmt.setString(1, address.getEmailAddress());
-                try (ResultSet rs = insrtRecStmt.executeQuery();) {
-                    if (rs.next()) {
-                        recId = rs.getLong("id");
-                    }
-                }
-                if (recId == null) {
+                insrtRecStmt.setObject(1, address.getId());
+                insrtRecStmt.setString(2, address.getEmailAddress());
+                int insertedCount = insrtRecStmt.executeUpdate();
+                if (insertedCount != 1) {
                     DBUtil.transactionRollback(connection);
                     throw new IllegalStateException("Didn't receive the ID for the provided recipient address!");
                 }
@@ -49,7 +46,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
             }
 
             connection.commit();
-            return readById(recId);
+            return readById(address.getId());
         } catch (SQLException e) {
             DBUtil.transactionRollback(connection);
             throw new RuntimeException("Failed to create a recipient address!" + e);
@@ -62,27 +59,31 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
     }
 
     @Override
-    public List<RecipientAddress> create(Collection<RecipientAddress> addresses) {
+    public List<RecipientAddress> create(Collection<RecipientAddress> addressesToCreate) {
         Connection connection = null;
         try {
             connection = connectionManager.getConnection();
             connection.setAutoCommit(false);
             DBUtil.transactionBegin(connection);
 
-            List<Long> idList = new ArrayList<>();
-            try (PreparedStatement insrtRecStmt = connection.prepareStatement(
-                    DBUtil.setMultipleRowsToInsert(INSERT_ADDRESS_QUERY, addresses.size()))) {
-                int paramCounter = 1;
-                for (RecipientAddress address : addresses) {
-                    insrtRecStmt.setString(paramCounter, address.getEmailAddress());
-                    paramCounter++;
+            List<UUID> idList = addressesToCreate.stream()
+                                                 .map(RecipientAddress::getId)
+                                                 .toList();
+
+            try (PreparedStatement insrtRecStmt = connection.prepareStatement(INSERT_ADDRESS_QUERY)) {
+                for (RecipientAddress address : addressesToCreate) {
+                    insrtRecStmt.setObject(1, address.getId());
+                    insrtRecStmt.setString(2, address.getEmailAddress());
+                    insrtRecStmt.addBatch();
                 }
-                try (ResultSet rs = insrtRecStmt.executeQuery()) {
-                    while (rs.next()) {
-                        idList.add(rs.getLong("id"));
-                    }
+                int[] rowsAffectedByBatch = insrtRecStmt.executeBatch();
+
+                int rowsInserted = 0;
+                for (int count : rowsAffectedByBatch) {
+                    rowsInserted += count;
                 }
-                if (addresses.size() != idList.size()) {
+
+                if (idList.size() != rowsInserted) {
                     DBUtil.transactionRollback(connection);
                     throw new IllegalStateException("Didn't receive all the IDs for the provided recipient type!");
                 }
@@ -96,24 +97,21 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
             throw new RuntimeException("Failed to create a recipient!" + e);
         } catch (RuntimeException e) {
             DBUtil.transactionRollback(connection);
-            throw new RuntimeException("Failed to create a recipient addresses!" + addresses, e);
+            throw new RuntimeException("Failed to create a recipient addresses!" + addressesToCreate, e);
         } finally {
             DBUtil.connectionClose(connection);
         }
     }
 
     @Override
-    public RecipientAddress readById(Long id) {
+    public RecipientAddress readById(UUID id) {
         try (Connection connection = connectionManager.getConnection();) {
             try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_READ_BY_ID)) {
-                preparedStatement.setLong(1, id);
+                preparedStatement.setObject(1, id);
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     preparedStatement.clearParameters();
                     if (rs.next()) {
-                        RecipientAddress address = new RecipientAddress();
-                        address.setId(rs.getLong("id"));
-                        address.setEmailAddress(rs.getString("email"));
-                        return address;
+                        return mapper(rs);
                     }
                 }
             }
@@ -124,22 +122,19 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
     }
 
     @Override
-    public List<RecipientAddress> readAllByIds(Collection<Long> idList) {
+    public List<RecipientAddress> readAllByIds(Collection<UUID> idList) {
         try (Connection connection = connectionManager.getConnection();) {
             try (PreparedStatement preparedStatement = connection.prepareStatement(
                     DBUtil.setDynamicSelectSqlParams(SELECT_ALL_IN_LIST_QUERY, idList.size()))) {
                 int paramCounter = 1;
-                for (Long id : idList) {
-                    preparedStatement.setLong(paramCounter, id);
+                for (UUID id : idList) {
+                    preparedStatement.setObject(paramCounter, id);
                     paramCounter++;
                 }
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     List<RecipientAddress> addresses = new ArrayList<>();
                     while (rs.next()) {
-                        RecipientAddress address = new RecipientAddress();
-                        address.setId(rs.getLong("id"));
-                        address.setEmailAddress(rs.getString("email"));
-                        addresses.add(address);
+                        addresses.add(mapper(rs));
                     }
                     preparedStatement.clearParameters();
                     return addresses;
@@ -158,10 +153,7 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     preparedStatement.clearParameters();
                     if (rs.next()) {
-                        RecipientAddress address = new RecipientAddress();
-                        address.setId(rs.getLong("id"));
-                        address.setEmailAddress(rs.getString("email"));
-                        return address;
+                        return mapper(rs);
                     }
                 }
             }
@@ -169,5 +161,12 @@ public class RecipientAddressStorage implements IRecipientAddressStorage {
             throw new RuntimeException("Failed to find a recipient address: " + emailAddress, e);
         }
         return null;
+    }
+
+    private RecipientAddress mapper(ResultSet rs) throws SQLException {
+        RecipientAddress address = new RecipientAddress();
+        address.setId(rs.getObject("id", UUID.class));
+        address.setEmailAddress(rs.getString("email"));
+        return address;
     }
 }
