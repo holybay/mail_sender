@@ -4,17 +4,18 @@ import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.Recipient;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class EmailOutDto {
 
-    private Long id;
+    private UUID id;
     private List<Recipient> recipientsTo;
     private List<Recipient> recipientsCC;
     private List<Recipient> recipientsBCC;
     private String title;
     private String text;
 
-    private EmailOutDto(Long id, List<Recipient> recipientsTo, List<Recipient> recipientsCC, List<Recipient> recipientsBCC, String title, String text) {
+    private EmailOutDto(UUID id, List<Recipient> recipientsTo, List<Recipient> recipientsCC, List<Recipient> recipientsBCC, String title, String text) {
         this.id = id;
         this.recipientsTo = recipientsTo;
         this.recipientsCC = recipientsCC;
@@ -27,11 +28,11 @@ public class EmailOutDto {
         return new EmailOutDtoBuilder();
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -101,7 +102,7 @@ public class EmailOutDto {
     }
 
     public static class EmailOutDtoBuilder {
-        private Long id;
+        private UUID id;
         private List<Recipient> recipientsTo;
         private List<Recipient> recipientsCC;
         private List<Recipient> recipientsBCC;
@@ -111,7 +112,7 @@ public class EmailOutDto {
         private EmailOutDtoBuilder() {
         }
 
-        public EmailOutDtoBuilder setId(Long id) {
+        public EmailOutDtoBuilder setId(UUID id) {
             this.id = id;
             return this;
         }

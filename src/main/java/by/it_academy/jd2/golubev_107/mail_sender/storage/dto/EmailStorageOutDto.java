@@ -2,17 +2,18 @@ package by.it_academy.jd2.golubev_107.mail_sender.storage.dto;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class EmailStorageOutDto {
 
-    private Long id;
+    private UUID id;
     private List<RecipientOutDto> recipientsTo;
     private List<RecipientOutDto> recipientsCC;
     private List<RecipientOutDto> recipientsBCC;
     private String title;
     private String text;
 
-    private EmailStorageOutDto(Long id, List<RecipientOutDto> recipientsTo, List<RecipientOutDto> recipientsCC,
+    private EmailStorageOutDto(UUID id, List<RecipientOutDto> recipientsTo, List<RecipientOutDto> recipientsCC,
                                List<RecipientOutDto> recipientsBCC, String title, String text) {
         this.id = id;
         this.recipientsTo = recipientsTo;
@@ -26,11 +27,11 @@ public class EmailStorageOutDto {
         return new EmailStorageOutDtoBuilder();
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -103,7 +104,7 @@ public class EmailStorageOutDto {
     }
 
     public static class EmailStorageOutDtoBuilder {
-        private Long id;
+        private UUID id;
         private List<RecipientOutDto> recipientsTo;
         private List<RecipientOutDto> recipientsCC;
         private List<RecipientOutDto> recipientsBCC;
@@ -113,7 +114,7 @@ public class EmailStorageOutDto {
         private EmailStorageOutDtoBuilder() {
         }
 
-        public EmailStorageOutDtoBuilder setId(Long id) {
+        public EmailStorageOutDtoBuilder setId(UUID id) {
             this.id = id;
             return this;
         }

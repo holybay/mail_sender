@@ -21,21 +21,21 @@ import java.util.UUID;
 
 public class MailStorage implements IMailStorage {
 
-    private static final String INSERT_EMAIL_QUERY = "INSERT INTO app.email (title, body_text) VALUES(?, ?) RETURNING id;";
+    private static final String INSERT_EMAIL_QUERY = "INSERT INTO app.email (id, title, body_text) VALUES(?, ?, ?)";
     private static final String SELECT_EMAIL_QUERY = "SELECT id, title, body_text FROM app.email WHERE id = ?;";
     private static final String SELECT_ALL_EMAIL_QUERY = "SELECT id, title, body_text FROM app.email;";
-    private static final String INSERT_CROSS_EMAIL_RECIPIENTS_QUERY = """
-            INSERT INTO app.cross_email_address_type (email_id, address_id, type_id)
-            VALUES (?, ?, ?);""";
+    private static final String INSERT_RECIPIENTS_QUERY = """
+            INSERT INTO app.email_recipients (id, email_id, address_id, type_id)
+            VALUES (?, ?, ?, ?);""";
     private static final String SELECT_RECIPIENT_TYPE_QUERY = "SELECT id FROM app.recipient_type WHERE type = ?;";
     private static final String SELECT_ALL_RECIPIENT_TYPE_QUERY = "SELECT id, type FROM app.recipient_type;";
     private static final String SELECT_RECIPIENTS_BY_EMAIL_ID_QUERY = """
             SELECT id, email_id, address_id, type_id
-            FROM app.cross_email_address_type
+            FROM app.email_recipients
             WHERE email_id = ?;""";
     private static final String SELECT_ALL_RECIPIENTS_QUERY = """
             SELECT id, email_id, address_id, type_id
-            FROM app.cross_email_address_type
+            FROM app.email_recipients
             ORDER BY email_id;""";
     private final IConnectionManager connectionManager;
 
@@ -44,15 +44,15 @@ public class MailStorage implements IMailStorage {
     }
 
     @Override
-    public Long create(Email email) {
+    public void create(Email email) {
         Connection connection = null;
-        Long emailId;
         try {
             connection = connectionManager.getConnection();
             connection.setAutoCommit(false);
             DBUtil.transactionBegin(connection);
 
-            emailId = insertEmail(email, connection);
+            insertEmail(email, connection);
+            UUID emailId = email.getId();
             insertRecipientsByType(emailId, Recipient.RecipientType.TO.name(), email.getRecipientsTo(), connection);
             insertRecipientsByType(emailId, Recipient.RecipientType.CC.name(), email.getRecipientsCC(), connection);
             insertRecipientsByType(emailId, Recipient.RecipientType.BCC.name(), email.getRecipientsBCC(), connection);
@@ -64,16 +64,15 @@ public class MailStorage implements IMailStorage {
         } finally {
             DBUtil.connectionClose(connection);
         }
-        return emailId;
     }
 
     @Override
-    public EmailStorageOutDto readById(Long id) {
-        try (Connection connection = connectionManager.getConnection();) {
+    public EmailStorageOutDto readById(UUID id) {
+        try (Connection connection = connectionManager.getConnection()) {
             EmailStorageOutDto emailOutDto = selectEmailPart(id, connection);
             if (emailOutDto != null) {
                 Map<Long, Recipient.RecipientType> allRecTypes = selectAllRecipientTypes(connection);
-                Map<Long, List<RecipientOutDto>> allRecptsByEmailId = selectRecipientsPart(emailOutDto,
+                Map<UUID, List<RecipientOutDto>> allRecptsByEmailId = selectRecipientsPart(emailOutDto,
                         allRecTypes, connection);
                 setRecipientsToEmail(emailOutDto, allRecptsByEmailId.get(emailOutDto.getId()));
                 return emailOutDto;
@@ -90,7 +89,7 @@ public class MailStorage implements IMailStorage {
             List<EmailStorageOutDto> allEmails = selectAllEmails(connection);
             if (!allEmails.isEmpty()) {
                 Map<Long, Recipient.RecipientType> allRecTypes = selectAllRecipientTypes(connection);
-                Map<Long, List<RecipientOutDto>> allRecptsByEmailId = selectAllRecipients(allRecTypes, connection);
+                Map<UUID, List<RecipientOutDto>> allRecptsByEmailId = selectAllRecipients(allRecTypes, connection);
                 allEmails.forEach(e -> setRecipientsToEmail(e, allRecptsByEmailId.get(e.getId())));
                 return allEmails;
             }
@@ -100,17 +99,13 @@ public class MailStorage implements IMailStorage {
         return Collections.emptyList();
     }
 
-    private EmailStorageOutDto selectEmailPart(Long receivedId, Connection connection) throws SQLException {
+    private EmailStorageOutDto selectEmailPart(UUID receivedId, Connection connection) throws SQLException {
         try (PreparedStatement selectEmailStmt = connection.prepareStatement(SELECT_EMAIL_QUERY)) {
-            selectEmailStmt.setLong(1, receivedId);
+            selectEmailStmt.setObject(1, receivedId);
             try (ResultSet rs = selectEmailStmt.executeQuery()) {
                 selectEmailStmt.clearParameters();
                 if (rs.next()) {
-                    return EmailStorageOutDto.builder()
-                                             .setId(rs.getLong("id"))
-                                             .setTitle(rs.getString("title"))
-                                             .setText(rs.getString("body_text"))
-                                             .build();
+                    return mapToEmailOutDto(rs);
                 }
             }
         }
@@ -123,15 +118,19 @@ public class MailStorage implements IMailStorage {
                 selectEmailStmt.clearParameters();
                 List<EmailStorageOutDto> allEmails = new ArrayList<>();
                 while (rs.next()) {
-                    allEmails.add(EmailStorageOutDto.builder()
-                                                    .setId(rs.getLong("id"))
-                                                    .setTitle(rs.getString("title"))
-                                                    .setText(rs.getString("body_text"))
-                                                    .build());
+                    allEmails.add(mapToEmailOutDto(rs));
                 }
                 return allEmails;
             }
         }
+    }
+
+    private EmailStorageOutDto mapToEmailOutDto(ResultSet rs) throws SQLException {
+        return EmailStorageOutDto.builder()
+                                 .setId(rs.getObject("id", UUID.class))
+                                 .setTitle(rs.getString("title"))
+                                 .setText(rs.getString("body_text"))
+                                 .build();
     }
 
     private Map<Long, Recipient.RecipientType> selectAllRecipientTypes(Connection connection) throws SQLException {
@@ -147,12 +146,12 @@ public class MailStorage implements IMailStorage {
         }
     }
 
-    private Map<Long, List<RecipientOutDto>> selectRecipientsPart(EmailStorageOutDto emailOutDto,
+    private Map<UUID, List<RecipientOutDto>> selectRecipientsPart(EmailStorageOutDto emailOutDto,
                                                                   Map<Long, Recipient.RecipientType> allRecTypes,
                                                                   Connection connection) throws SQLException {
         try (PreparedStatement selectRecByEmailIdStmt = connection.prepareStatement(
                 SELECT_RECIPIENTS_BY_EMAIL_ID_QUERY)) {
-            selectRecByEmailIdStmt.setLong(1, emailOutDto.getId());
+            selectRecByEmailIdStmt.setObject(1, emailOutDto.getId());
             try (ResultSet rs = selectRecByEmailIdStmt.executeQuery()) {
                 selectRecByEmailIdStmt.clearParameters();
                 return getEmailRecptsFromRS(rs, allRecTypes);
@@ -160,7 +159,7 @@ public class MailStorage implements IMailStorage {
         }
     }
 
-    private Map<Long, List<RecipientOutDto>> selectAllRecipients(Map<Long, Recipient.RecipientType> allRecTypes,
+    private Map<UUID, List<RecipientOutDto>> selectAllRecipients(Map<Long, Recipient.RecipientType> allRecTypes,
                                                                  Connection connection) throws SQLException {
         try (PreparedStatement selectAllEmailsRecptsStmt = connection.prepareStatement(
                 SELECT_ALL_RECIPIENTS_QUERY)) {
@@ -171,24 +170,24 @@ public class MailStorage implements IMailStorage {
         }
     }
 
-    private Map<Long, List<RecipientOutDto>> getEmailRecptsFromRS(ResultSet rs,
+    private Map<UUID, List<RecipientOutDto>> getEmailRecptsFromRS(ResultSet rs,
                                                                   Map<Long, Recipient.RecipientType> allRecTypes)
             throws SQLException {
 
-        Map<Long, List<RecipientOutDto>> allRecptsByEmail = new HashMap<>();
-        Long iterableId = null;
+        Map<UUID, List<RecipientOutDto>> allRecptsByEmail = new HashMap<>();
+        UUID iterableId = null;
         while (rs.next()) {
-            long emailIdToCheck = rs.getLong("email_id");
+            UUID emailIdToCheck = rs.getObject("email_id", UUID.class);
             if (iterableId == null) {
                 iterableId = emailIdToCheck;
                 allRecptsByEmail.put(iterableId, new ArrayList<>());
             }
-            if (iterableId != emailIdToCheck) {
+            if (!iterableId.equals(emailIdToCheck)) {
                 iterableId = emailIdToCheck;
                 allRecptsByEmail.put(iterableId, new ArrayList<>());
             }
             RecipientOutDto recOut = new RecipientOutDto();
-            recOut.setId(rs.getLong("id"));
+            recOut.setId(rs.getObject("id", UUID.class));
             recOut.setAddressId(rs.getObject("address_id", UUID.class));
             recOut.setType(allRecTypes.get(rs.getLong("type_id")));
             allRecptsByEmail.get(iterableId).add(recOut);
@@ -214,23 +213,19 @@ public class MailStorage implements IMailStorage {
         emailOutDto.setRecipientsBCC(recipientsBCC);
     }
 
-    private Long insertEmail(Email email, Connection connection) throws SQLException {
-        Long emailId = null;
+    private void insertEmail(Email email, Connection connection) throws SQLException {
         try (PreparedStatement insrtEmail = connection.prepareStatement(INSERT_EMAIL_QUERY)) {
-            insrtEmail.setString(1, email.getTitle());
-            insrtEmail.setString(2, email.getText());
-            try (ResultSet rs = insrtEmail.executeQuery()) {
-                if (rs.next()) {
-                    emailId = rs.getLong("id");
-                }
-            }
-            if (emailId == null) {
+            insrtEmail.setObject(1, email.getId());
+            insrtEmail.setString(2, email.getTitle());
+            insrtEmail.setString(3, email.getText());
+            int rowsInserted = insrtEmail.executeUpdate();
+
+            if (rowsInserted != 1) {
                 DBUtil.transactionRollback(connection);
-                throw new IllegalStateException("Didn't receive the ID for the provided email!");
+                throw new IllegalStateException("Inserted more than one row!");
             }
             insrtEmail.clearParameters();
         }
-        return emailId;
     }
 
     private Long getRecipientTypeId(String type, Connection connection) throws SQLException {
@@ -251,23 +246,24 @@ public class MailStorage implements IMailStorage {
         return recTypeId;
     }
 
-    private void insertRecipientsByType(Long emailId, String type, List<Recipient> recipientList,
+    private void insertRecipientsByType(UUID emailId, String type, List<Recipient> recipientList,
                                         Connection connection) throws SQLException {
         if (recipientList.isEmpty()) {
             return;
         }
         Long recTypeId = getRecipientTypeId(type, connection);
-        try (PreparedStatement insrtCrossEmAddrTypeStmt = connection.prepareStatement(
-                INSERT_CROSS_EMAIL_RECIPIENTS_QUERY)) {
+        try (PreparedStatement insrtRecipientsStmt = connection.prepareStatement(
+                INSERT_RECIPIENTS_QUERY)) {
             for (Recipient recipient : recipientList) {
-                insrtCrossEmAddrTypeStmt.setLong(1, emailId);
-                insrtCrossEmAddrTypeStmt.setObject(2, recipient.getAddress().getId());
-                insrtCrossEmAddrTypeStmt.setLong(3, recTypeId);
-                insrtCrossEmAddrTypeStmt.addBatch();
+                insrtRecipientsStmt.setObject(1, recipient.getId());
+                insrtRecipientsStmt.setObject(2, emailId);
+                insrtRecipientsStmt.setObject(3, recipient.getAddress().getId());
+                insrtRecipientsStmt.setLong(4, recTypeId);
+                insrtRecipientsStmt.addBatch();
             }
-            insrtCrossEmAddrTypeStmt.executeBatch();
+            insrtRecipientsStmt.executeBatch();
 
-            insrtCrossEmAddrTypeStmt.clearParameters();
+            insrtRecipientsStmt.clearParameters();
         }
     }
 }

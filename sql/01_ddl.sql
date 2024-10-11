@@ -24,7 +24,7 @@ ALTER TABLE IF EXISTS app.recipient_address
 
 CREATE TABLE app.email
 (
-id bigserial,
+id uuid,
 title character varying,
 body_text character varying,
 CONSTRAINT email_pk PRIMARY KEY (id)
@@ -33,10 +33,10 @@ CONSTRAINT email_pk PRIMARY KEY (id)
 ALTER TABLE IF EXISTS app.email
     OWNER to postgres;
 
-CREATE TABLE app.cross_email_address_type
+CREATE TABLE app.email_recipients
 (
-id bigserial,
-email_id bigint,
+id uuid,
+email_id uuid,
 address_id uuid,
 type_id bigint,
 CONSTRAINT crs_e_addr_type_pk PRIMARY KEY (id),
@@ -46,7 +46,7 @@ CONSTRAINT crs_e_addr_type_type_fk  FOREIGN KEY (type_id) REFERENCES app.recipie
 CONSTRAINT crs_e_addr_type_row_unq  UNIQUE (email_id,address_id, type_id)
 );
 
-ALTER TABLE IF EXISTS app.cross_email_address_type
+ALTER TABLE IF EXISTS app.email_recipients
     OWNER to postgres;
 
 

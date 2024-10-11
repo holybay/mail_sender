@@ -1,14 +1,15 @@
 package by.it_academy.jd2.golubev_107.mail_sender.storage.entity;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class Recipient {
 
-    private Long id;
+    private UUID id;
     private RecipientAddress address;
     private RecipientType type;
 
-    private Recipient(Long id, RecipientAddress address, RecipientType type) {
+    private Recipient(UUID id, RecipientAddress address, RecipientType type) {
         this.id = id;
         this.address = address;
         this.type = type;
@@ -18,11 +19,11 @@ public class Recipient {
         return new RecipientBuilder();
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -69,14 +70,14 @@ public class Recipient {
     }
 
     public static class RecipientBuilder {
-        private Long id;
+        private UUID id;
         private RecipientAddress address;
         private RecipientType type;
 
         private RecipientBuilder() {
         }
 
-        public RecipientBuilder setId(Long id) {
+        public RecipientBuilder setId(UUID id) {
             this.id = id;
             return this;
         }

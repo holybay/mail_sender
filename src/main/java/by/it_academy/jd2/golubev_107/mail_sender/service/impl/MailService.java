@@ -149,6 +149,7 @@ public class MailService implements IMailService {
         List<Recipient> recipientsCC = accumulateRecptsByType(addressCC, Recipient.RecipientType.CC);
         List<Recipient> recipientsBCC = accumulateRecptsByType(addressBCC, Recipient.RecipientType.BCC);
         return Email.builder()
+                    .setId(UUID.randomUUID())
                     .setRecipientsTo(recipientsTo)
                     .setRecipientsCC(recipientsCC)
                     .setRecipientsBCC(recipientsBCC)
@@ -185,6 +186,7 @@ public class MailService implements IMailService {
 
     private Recipient toRecipient(RecipientAddress address, Recipient.RecipientType type) {
         return Recipient.builder()
+                        .setId(UUID.randomUUID())
                         .setAddress(address)
                         .setType(type)
                         .build();

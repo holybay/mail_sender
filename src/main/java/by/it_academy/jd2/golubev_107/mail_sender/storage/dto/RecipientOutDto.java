@@ -7,15 +7,15 @@ import java.util.UUID;
 
 public class RecipientOutDto {
 
-    private Long id;
+    private UUID id;
     private UUID addressId;
     private Recipient.RecipientType type;
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
