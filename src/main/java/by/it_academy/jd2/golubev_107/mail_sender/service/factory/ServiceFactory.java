@@ -8,7 +8,7 @@ import by.it_academy.jd2.golubev_107.mail_sender.service.IRecipientAddressServic
 import by.it_academy.jd2.golubev_107.mail_sender.service.config.MailSenderConfig;
 import by.it_academy.jd2.golubev_107.mail_sender.service.impl.MailSenderService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.impl.MailService;
-import by.it_academy.jd2.golubev_107.mail_sender.service.impl.RecepientAddressService;
+import by.it_academy.jd2.golubev_107.mail_sender.service.impl.RecipientAddressService;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.factory.StorageFactory;
 
 import java.util.Properties;
@@ -25,7 +25,7 @@ public class ServiceFactory {
     private final IMailSenderService mailSenderService;
 
     private ServiceFactory(StorageFactory storageFactory, String mailPropertiesFile) {
-        recipientAddressService = new RecepientAddressService(storageFactory.getRecipientStorage());
+        recipientAddressService = new RecipientAddressService(storageFactory.getRecipientStorage());
         mailService = new MailService(storageFactory.getMailStorage(), recipientAddressService);
         MailSenderConfig config = setMailConfig(mailPropertiesFile);
         mailSenderService = new MailSenderService(config);

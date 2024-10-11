@@ -9,11 +9,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-public class RecepientAddressService implements IRecipientAddressService {
+public class RecipientAddressService implements IRecipientAddressService {
 
     private final IRecipientAddressStorage storage;
 
-    public RecepientAddressService(IRecipientAddressStorage storage) {
+    public RecipientAddressService(IRecipientAddressStorage storage) {
         this.storage = storage;
     }
 
