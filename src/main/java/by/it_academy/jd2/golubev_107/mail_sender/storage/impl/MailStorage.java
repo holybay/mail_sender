@@ -14,7 +14,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -135,27 +134,26 @@ public class MailStorage implements IMailStorage {
     }
 
     @Override
-    public void updateStatus(UUID id, EmailStatus.EStatus newStatus) {
-        EmailStorageOutDto toUpdate = readById(id);
+    public void update(Email email) {
         Connection connection = null;
         try {
             connection = connectionManager.getConnection();
             connection.setAutoCommit(false);
             DBUtil.transactionBegin(connection);
 
-            EmailStatus emailStatus = getEmailStatus(newStatus.name(), connection,
+            EmailStatus emailStatus = getEmailStatus(email.getEmailStatus().getStatus().name(), connection,
                     SELECT_EMAIL_STATUS_BY_NAME_QUERY);
 
-            updateEmail(toUpdate, emailStatus.getId(), connection);
-            UUID emailId = toUpdate.getId();
-            updateRecipientsByType(emailId, Recipient.RecipientType.TO.name(), toUpdate.getRecipientsTo(), connection);
-            updateRecipientsByType(emailId, Recipient.RecipientType.CC.name(), toUpdate.getRecipientsCC(), connection);
-            updateRecipientsByType(emailId, Recipient.RecipientType.BCC.name(), toUpdate.getRecipientsBCC(), connection);
+            update(email, emailStatus.getId(), connection);
+            UUID emailId = email.getId();
+            updateRecipientsByType(emailId, Recipient.RecipientType.TO.name(), email.getRecipientsTo(), connection);
+            updateRecipientsByType(emailId, Recipient.RecipientType.CC.name(), email.getRecipientsCC(), connection);
+            updateRecipientsByType(emailId, Recipient.RecipientType.BCC.name(), email.getRecipientsBCC(), connection);
 
             connection.commit();
         } catch (SQLException | RuntimeException e) {
             DBUtil.transactionRollback(connection);
-            throw new RuntimeException("Failed to create an email with id: " + id, e);
+            throw new RuntimeException("Failed to update an email with id: " + email, e);
         } finally {
             DBUtil.connectionClose(connection);
         }
@@ -335,13 +333,13 @@ public class MailStorage implements IMailStorage {
         }
     }
 
-    private void updateEmail(EmailStorageOutDto emailStorageOutDto, Long statusId, Connection connection) throws SQLException {
+    private void update(Email email, Long statusId, Connection connection) throws SQLException {
         try (PreparedStatement updateEmail = connection.prepareStatement(UPDATE_EMAIL_QUERY)) {
-            updateEmail.setString(1, emailStorageOutDto.getTitle());
-            updateEmail.setString(2, emailStorageOutDto.getText());
+            updateEmail.setString(1, email.getTitle());
+            updateEmail.setString(2, email.getText());
             updateEmail.setLong(3, statusId);
-            updateEmail.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
-            updateEmail.setObject(5, emailStorageOutDto.getId());
+            updateEmail.setTimestamp(4, Timestamp.valueOf(email.getUpdatedAt()));
+            updateEmail.setObject(5, email.getId());
             int rowsUpdated = updateEmail.executeUpdate();
             updateEmail.clearParameters();
 
@@ -391,7 +389,7 @@ public class MailStorage implements IMailStorage {
         }
     }
 
-    private void updateRecipientsByType(UUID emailId, String type, List<RecipientOutDto> recipientList,
+    private void updateRecipientsByType(UUID emailId, String type, List<Recipient> recipientList,
                                         Connection connection) throws SQLException {
         if (recipientList.isEmpty()) {
             return;
@@ -399,11 +397,11 @@ public class MailStorage implements IMailStorage {
         Long recTypeId = getRecipientTypeId(type, connection);
         try (PreparedStatement updateRecipientsStmt = connection.prepareStatement(
                 UPDATE_RECIPIENTS_QUERY)) {
-            for (RecipientOutDto recipientDto : recipientList) {
+            for (Recipient recipient : recipientList) {
                 updateRecipientsStmt.setObject(1, emailId);
-                updateRecipientsStmt.setObject(2, recipientDto.getAddressId());
+                updateRecipientsStmt.setObject(2, recipient.getAddress().getId());
                 updateRecipientsStmt.setLong(3, recTypeId);
-                updateRecipientsStmt.setObject(4, recipientDto.getId());
+                updateRecipientsStmt.setObject(4, recipient.getId());
                 updateRecipientsStmt.addBatch();
             }
             updateRecipientsStmt.executeBatch();

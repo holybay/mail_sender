@@ -55,7 +55,12 @@ public class MailService implements IMailService {
 
     @Override
     public void updateStatus(UUID id, EmailStatus.EStatus newStatus) {
-        mailStorage.updateStatus(id, newStatus);
+        EmailStorageOutDto emailStorageOutDto = mailStorage.readById(id);
+        List<Email> emails = setAllRecipients(List.of(emailStorageOutDto));
+        Email email = emails.get(0);
+        email.setEmailStatus(new EmailStatus(newStatus));
+        email.setUpdatedAt(LocalDateTime.now());
+        mailStorage.update(email);
     }
 
     @Override

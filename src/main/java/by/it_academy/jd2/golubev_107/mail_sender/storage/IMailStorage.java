@@ -17,5 +17,5 @@ public interface IMailStorage {
 
     List<EmailStorageOutDto> readAllByStatus(EmailStatus.EStatus newStatus);
 
-    void updateStatus(UUID id, EmailStatus.EStatus newStatus);
+    void update(Email email);
 }
