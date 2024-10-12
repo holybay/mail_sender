@@ -33,6 +33,8 @@ public class MailStorage implements IMailStorage {
             "SELECT id, title, body_text, status_id, created_at, updated_at FROM app.email WHERE id = ?;";
     private static final String SELECT_ALL_EMAIL_QUERY =
             "SELECT id, title, body_text, status_id, created_at, updated_at FROM app.email;";
+    private static final String SELECT_ALL_EMAIL_BY_STATUS_QUERY =
+            "SELECT id, title, body_text, status_id, created_at, updated_at FROM app.email WHERE status_id = ?;";
     private static final String INSERT_RECIPIENTS_QUERY = """
             INSERT INTO app.email_recipients (id, email_id, address_id, type_id)
             VALUES (?, ?, ?, ?);""";
@@ -117,6 +119,22 @@ public class MailStorage implements IMailStorage {
     }
 
     @Override
+    public List<EmailStorageOutDto> readAllByStatus(EmailStatus.EStatus newStatus) {
+        try (Connection connection = connectionManager.getConnection()) {
+            List<EmailStorageOutDto> allEmails = selectAllEmailsByStatus(newStatus.name(), connection);
+            if (!allEmails.isEmpty()) {
+                Map<Long, Recipient.RecipientType> allRecTypes = selectAllRecipientTypes(connection);
+                Map<UUID, List<RecipientOutDto>> allRecptsByEmailId = selectAllRecipients(allRecTypes, connection);
+                allEmails.forEach(e -> setRecipientsToEmail(e, allRecptsByEmailId.get(e.getId())));
+                return allEmails;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to read all emails with status = " + newStatus, e);
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
     public void updateStatus(UUID id, EmailStatus.EStatus newStatus) {
         EmailStorageOutDto toUpdate = readById(id);
         Connection connection = null;
@@ -168,6 +186,22 @@ public class MailStorage implements IMailStorage {
                     Long statusId = rs.getLong("status_id");
                     EmailStatus status = getEmailStatus(statusId, connection,
                             SELECT_EMAIL_STATUS_BY_ID_QUERY);
+                    allEmails.add(mapToEmailOutDto(rs, status));
+                }
+                return allEmails;
+            }
+        }
+    }
+
+    private List<EmailStorageOutDto> selectAllEmailsByStatus(String statusName, Connection connection) throws SQLException {
+        try (PreparedStatement selectEmailsByStatusStmt = connection.prepareStatement(SELECT_ALL_EMAIL_BY_STATUS_QUERY)) {
+            EmailStatus status = getEmailStatus(statusName, connection,
+                    SELECT_EMAIL_STATUS_BY_NAME_QUERY);
+            selectEmailsByStatusStmt.setLong(1, status.getId());
+            try (ResultSet rs = selectEmailsByStatusStmt.executeQuery()) {
+                selectEmailsByStatusStmt.clearParameters();
+                List<EmailStorageOutDto> allEmails = new ArrayList<>();
+                while (rs.next()) {
                     allEmails.add(mapToEmailOutDto(rs, status));
                 }
                 return allEmails;

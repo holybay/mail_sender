@@ -14,4 +14,6 @@ public interface IMailService {
     List<EmailOutDto> getAll();
 
     void updateStatus(UUID id, EmailStatus.EStatus newStatus);
+
+    List<EmailOutDto> getAllByStatus(EmailStatus.EStatus newStatus);
 }

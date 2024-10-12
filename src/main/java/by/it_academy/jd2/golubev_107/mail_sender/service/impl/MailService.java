@@ -58,6 +58,16 @@ public class MailService implements IMailService {
         mailStorage.updateStatus(id, newStatus);
     }
 
+    @Override
+    public List<EmailOutDto> getAllByStatus(EmailStatus.EStatus newStatus) {
+        List<EmailStorageOutDto> emailStorageOutList = mailStorage.readAllByStatus(newStatus);
+        List<Email> allEmails = setAllRecipients(emailStorageOutList);
+
+        return allEmails.stream()
+                        .map(this::toEmailOutDto)
+                        .toList();
+    }
+
     private List<Email> setAllRecipients(List<EmailStorageOutDto> emailStorageOutList) {
         Set<UUID> uniqueAddressIdSet = new HashSet<>();
         emailStorageOutList.forEach(e -> {
