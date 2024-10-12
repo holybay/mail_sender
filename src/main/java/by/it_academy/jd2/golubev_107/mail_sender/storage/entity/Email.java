@@ -1,5 +1,6 @@
 package by.it_academy.jd2.golubev_107.mail_sender.storage.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -12,14 +13,21 @@ public class Email {
     private List<Recipient> recipientsBCC;
     private String title;
     private String text;
+    private EmailStatus emailStatus;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    private Email(UUID id, List<Recipient> recipientsTo, List<Recipient> recipientsCC, List<Recipient> recipientsBCC, String title, String text) {
+    public Email(UUID id, List<Recipient> recipientsTo, List<Recipient> recipientsCC, List<Recipient> recipientsBCC,
+                 String title, String text, EmailStatus emailStatus, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.recipientsTo = recipientsTo;
         this.recipientsCC = recipientsCC;
         this.recipientsBCC = recipientsBCC;
         this.title = title;
         this.text = text;
+        this.emailStatus = emailStatus;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public static EmailBuilder builder() {
@@ -74,17 +82,41 @@ public class Email {
         this.text = text;
     }
 
+    public EmailStatus getEmailStatus() {
+        return emailStatus;
+    }
+
+    public void setEmailStatus(EmailStatus emailStatus) {
+        this.emailStatus = emailStatus;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Email email = (Email) o;
-        return Objects.equals(id, email.id) && Objects.equals(recipientsTo, email.recipientsTo) && Objects.equals(recipientsCC, email.recipientsCC) && Objects.equals(recipientsBCC, email.recipientsBCC) && Objects.equals(title, email.title) && Objects.equals(text, email.text);
+        return Objects.equals(id, email.id) && Objects.equals(recipientsTo, email.recipientsTo) && Objects.equals(recipientsCC, email.recipientsCC) && Objects.equals(recipientsBCC, email.recipientsBCC) && Objects.equals(title, email.title) && Objects.equals(text, email.text) && Objects.equals(emailStatus, email.emailStatus) && Objects.equals(createdAt, email.createdAt) && Objects.equals(updatedAt, email.updatedAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, recipientsTo, recipientsCC, recipientsBCC, title, text);
+        return Objects.hash(id, recipientsTo, recipientsCC, recipientsBCC, title, text, emailStatus, createdAt, updatedAt);
     }
 
     @Override
@@ -96,6 +128,9 @@ public class Email {
                 ", recipientsBCC=" + recipientsBCC +
                 ", title='" + title + '\'' +
                 ", text='" + text + '\'' +
+                ", emailStatus=" + emailStatus +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 
@@ -106,6 +141,9 @@ public class Email {
         private List<Recipient> recipientsBCC;
         private String title;
         private String text;
+        private EmailStatus emailStatus;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
 
         private EmailBuilder() {
         }
@@ -140,8 +178,24 @@ public class Email {
             return this;
         }
 
+        public EmailBuilder setEmailStatus(EmailStatus emailStatus) {
+            this.emailStatus = emailStatus;
+            return this;
+        }
+
+        public EmailBuilder setCreatedAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public EmailBuilder setUpdatedAt(LocalDateTime updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
         public Email build() {
-            return new Email(id, recipientsTo, recipientsCC, recipientsBCC, title, text);
+            return new Email(id, recipientsTo, recipientsCC, recipientsBCC,
+                    title, text, emailStatus, createdAt, updatedAt);
         }
     }
 }

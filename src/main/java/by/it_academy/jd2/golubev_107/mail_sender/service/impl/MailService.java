@@ -9,9 +9,11 @@ import by.it_academy.jd2.golubev_107.mail_sender.storage.IMailStorage;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.dto.EmailStorageOutDto;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.dto.RecipientOutDto;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.Email;
+import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.EmailStatus;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.Recipient;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.entity.RecipientAddress;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +51,11 @@ public class MailService implements IMailService {
         return allEmails.stream()
                         .map(this::toEmailOutDto)
                         .toList();
+    }
+
+    @Override
+    public void updateStatus(UUID id, EmailStatus.EStatus newStatus) {
+        mailStorage.updateStatus(id, newStatus);
     }
 
     private List<Email> setAllRecipients(List<EmailStorageOutDto> emailStorageOutList) {
@@ -148,6 +155,7 @@ public class MailService implements IMailService {
         List<Recipient> recipientsTo = accumulateRecptsByType(addressTo, Recipient.RecipientType.TO);
         List<Recipient> recipientsCC = accumulateRecptsByType(addressCC, Recipient.RecipientType.CC);
         List<Recipient> recipientsBCC = accumulateRecptsByType(addressBCC, Recipient.RecipientType.BCC);
+        LocalDateTime timeCreated = LocalDateTime.now();
         return Email.builder()
                     .setId(UUID.randomUUID())
                     .setRecipientsTo(recipientsTo)
@@ -155,6 +163,9 @@ public class MailService implements IMailService {
                     .setRecipientsBCC(recipientsBCC)
                     .setTitle(dto.getTitle())
                     .setText(dto.getText())
+                    .setEmailStatus(new EmailStatus(EmailStatus.EStatus.LOADED))
+                    .setCreatedAt(timeCreated)
+                    .setUpdatedAt(timeCreated)
                     .build();
     }
 
@@ -175,6 +186,9 @@ public class MailService implements IMailService {
                     .setRecipientsBCC(recipientsBCC)
                     .setTitle(storageOutDto.getTitle())
                     .setText(storageOutDto.getText())
+                    .setEmailStatus(storageOutDto.getEmailStatus())
+                    .setCreatedAt(storageOutDto.getCreatedAt())
+                    .setUpdatedAt(storageOutDto.getUpdatedAt())
                     .build();
     }
 
@@ -208,6 +222,9 @@ public class MailService implements IMailService {
                           .setRecipientsBCC(email.getRecipientsBCC())
                           .setTitle(email.getTitle())
                           .setText(email.getText())
+                          .setEmailStatus(email.getEmailStatus())
+                          .setCreatedAt(email.getCreatedAt())
+                          .setUpdatedAt(email.getUpdatedAt())
                           .build();
     }
 }
