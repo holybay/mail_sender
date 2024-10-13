@@ -35,4 +35,17 @@ public class ConnectionManagerFactory {
         return connManagers.get(className);
     }
 
+    public void destroy() {
+        for (Map.Entry<String, IConnectionManager> closeable : connManagers.entrySet()) {
+            IConnectionManager connManager = closeable.getValue();
+            try {
+                if (connManager != null) {
+                    connManager.close();
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
 }

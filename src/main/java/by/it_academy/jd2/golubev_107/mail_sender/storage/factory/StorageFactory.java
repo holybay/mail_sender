@@ -22,6 +22,10 @@ public class StorageFactory {
         return INSTANCE;
     }
 
+    public void destroy() {
+        ConnectionManagerFactory.getInstance().destroy();
+    }
+
     public IRecipientAddressStorage getRecipientStorage() {
         return recipientStorage;
     }

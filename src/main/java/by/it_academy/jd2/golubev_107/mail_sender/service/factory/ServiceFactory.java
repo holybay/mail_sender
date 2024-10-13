@@ -9,9 +9,11 @@ import by.it_academy.jd2.golubev_107.mail_sender.service.config.MailSenderConfig
 import by.it_academy.jd2.golubev_107.mail_sender.service.impl.MailSenderService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.impl.MailService;
 import by.it_academy.jd2.golubev_107.mail_sender.service.impl.RecipientAddressService;
+import by.it_academy.jd2.golubev_107.mail_sender.service.job.SchedulerService;
 import by.it_academy.jd2.golubev_107.mail_sender.storage.factory.StorageFactory;
 
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class ServiceFactory {
 
@@ -23,16 +25,29 @@ public class ServiceFactory {
     private final IRecipientAddressService recipientAddressService;
     private final IMailService mailService;
     private final IMailSenderService mailSenderService;
+    private final SchedulerService schedulerService;
 
     private ServiceFactory(StorageFactory storageFactory, String mailPropertiesFile) {
         recipientAddressService = new RecipientAddressService(storageFactory.getRecipientStorage());
         mailService = new MailService(storageFactory.getMailStorage(), recipientAddressService);
         MailSenderConfig config = setMailConfig(mailPropertiesFile);
         mailSenderService = new MailSenderService(config);
+        schedulerService = new SchedulerService(3, TimeUnit.MINUTES, 1,
+                mailService, mailSenderService);
     }
 
     public static ServiceFactory getInstance() {
         return INSTANCE;
+    }
+
+    public void destroy() {
+        try {
+            if (schedulerService != null) {
+                schedulerService.close();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public IRecipientAddressService getRecipientAddressService() {
