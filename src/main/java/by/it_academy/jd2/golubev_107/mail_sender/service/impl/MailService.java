@@ -103,6 +103,10 @@ public class MailService implements IMailService {
         Map<String, List<String>> duplicatesByType = new HashMap<>();
 
         recipientsByType.forEach((k, v) -> {
+            if (v == null) {
+                throw new IllegalArgumentException(
+                        String.format("Didn't receive recipient param for %s recipient type", k));
+            }
             List<String> duplicates = checkForEmailDuplicatesInType(v);
             if (!duplicates.isEmpty()) {
                 duplicatesByType.put(k, duplicates);
@@ -158,12 +162,15 @@ public class MailService implements IMailService {
 
     private Email toEmailEntity(CreateEmailDto dto) {
         List<RecipientAddressDto> addressTo = Arrays.stream(dto.getRecipientsTo())
+                                                    .filter(e -> e.length() > 1)
                                                     .map(this::toRecptAddressDto)
                                                     .toList();
         List<RecipientAddressDto> addressCC = Arrays.stream(dto.getRecipientsCC())
+                                                    .filter(e -> e.length() > 1)
                                                     .map(this::toRecptAddressDto)
                                                     .toList();
         List<RecipientAddressDto> addressBCC = Arrays.stream(dto.getRecipientsBCC())
+                                                     .filter(e -> e.length() > 1)
                                                      .map(this::toRecptAddressDto)
                                                      .toList();
 
